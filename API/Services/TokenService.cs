@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using API.Entities;
 using API.Interfaces;
 using Microsoft.IdentityModel.Tokens;
@@ -10,18 +8,12 @@ namespace API.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly SymmetricSecurityKey _key;
+    private readonly SecurityKey _key;
     private readonly TimeSpan _tokenLifeTime;
 
-    public TokenService(IConfiguration config)
+    public TokenService(IConfiguration config, ISecurityKeyService securityKeyService)
     {
-        var tokenKey = config.GetValue<string>("TokenKey");
-        if (tokenKey == null) 
-        {
-            throw new ArgumentException("TokenKey does not set");
-        }
-
-        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
+        _key = securityKeyService.GetSecurityKey();
 
         var tokenLifeTimeSec = config.GetValue<int>("TokenLifeTimeSec");
         if (tokenLifeTimeSec == 0) 
