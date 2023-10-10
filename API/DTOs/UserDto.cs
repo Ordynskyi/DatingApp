@@ -2,12 +2,12 @@
 
 public struct UserDto
 {
-    public UserDto(string userName, string token)
+    public UserDto(string username, string token)
     {
-        UserName = userName;
+        Username = username;
         Token = token;
     }
 
-    public string UserName { get; set;}
+    public string Username { get; set;}
     public string Token {get;set;}
 }
