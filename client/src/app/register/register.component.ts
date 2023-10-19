@@ -20,8 +20,8 @@ export class RegisterComponent {
       next: () => this.cancel(),
       error: error => {
 
-        console.log(error.error);
-        this.toastr.error(error.error);
+        console.log(error);
+        this.toastr.error(error);
       }
     });
   }
