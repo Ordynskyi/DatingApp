@@ -49,7 +49,8 @@ public class UserRepository : IUserRepository
 
     public async Task<IEnumerable<MemberDto>> GetMembersAsync()
     {
-        throw new NotImplementedException();
+        var users = await GetUsersAsync();
+        return _mapper.Map<IEnumerable<MemberDto>>(users);
     }
 
     public async Task<MemberDto> GetMemberAsync(string username)
