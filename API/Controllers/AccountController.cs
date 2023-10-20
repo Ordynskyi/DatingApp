@@ -39,14 +39,20 @@ public class AccountController : BaseApiController
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
         
-        return new UserDto(user.Username, _tokenService.CreateToken(user));
+        return new UserDto(
+            user.Username,
+            _tokenService.CreateToken(user),
+            GetMainPhotoUrlOrEmpty(user));
     }
 
     [HttpPost("login")] // POST: api/account/login
     public async Task <ActionResult<UserDto>> Login(LoginDto loginDto)
     {
         var lowerName = loginDto.Username.ToLower();
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == lowerName);
+        var user = await _context.Users
+            .Include(p => p.Photos)
+            .FirstOrDefaultAsync(x => x.Username == lowerName);
+            
         if (user == null) return Unauthorized("user not found");
 
         using var hmac = new HMACSHA512(user.PasswordSalt);
@@ -57,11 +63,24 @@ public class AccountController : BaseApiController
             if (calculatedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid password");
         }
 
-        return new UserDto(user.Username, _tokenService.CreateToken(user));
+        return new UserDto(
+            user.Username,
+            _tokenService.CreateToken(user),
+            GetMainPhotoUrlOrEmpty(user));
     }
 
     private async Task<bool> UserExists(string username)
     {
         return await _context.Users.AnyAsync(user => user.Username == username);
+    }
+
+    private string GetMainPhotoUrlOrEmpty(AppUser user)
+    {
+        foreach (var photo in user.Photos)
+        {
+            if (photo.IsMain) return photo.Url;
+        }
+
+        return string.Empty;
     }
 }
