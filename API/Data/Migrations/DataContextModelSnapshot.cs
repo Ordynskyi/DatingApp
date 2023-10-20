@@ -41,6 +41,10 @@ namespace API.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Interests")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Introduction")
                         .IsRequired()
                         .HasColumnType("TEXT");
