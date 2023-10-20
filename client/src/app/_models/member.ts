@@ -11,6 +11,7 @@ export interface Member {
     lastActive: string
     introduction: string
     lookingFor: string
+    interests: string
     city: string
     country: string
     photos: Photo[]
