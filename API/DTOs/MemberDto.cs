@@ -1,6 +1,6 @@
 ﻿namespace API.DTOs;
 
-public struct MemberDto
+public class MemberDto
 {
     public MemberDto(
         int id,
