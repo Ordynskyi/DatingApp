@@ -4,6 +4,11 @@ namespace API.Entities;
 
 public class AppUser
 {
+    public AppUser() : 
+        this(0, string.Empty, Array.Empty<byte>(), Array.Empty<byte>()) {
+
+    }
+
     public AppUser(
         int id,
         string username,
