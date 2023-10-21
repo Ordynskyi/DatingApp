@@ -11,7 +11,7 @@ public class AutoMapperProfiles : Profile
         CreateMap<AppUser, MemberDto>()
             .ForMember(
                 dest => dest.PhotoUrl,
-                source => source.MapFrom(src => src.Photos.First(p => p.IsMain).Url))
+                source => source.MapFrom(src => src.Photos.FirstOrDefault(p => p.IsMain).Url))
                 // source => source.MapFrom<MainPhotoUrlMapper>())  // this doesn't work with '.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)' in the UserRepository.cs :(
             .ForMember(
                 dest => dest.Age,
