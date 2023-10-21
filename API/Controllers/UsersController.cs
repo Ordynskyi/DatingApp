@@ -28,6 +28,18 @@ public class UsersController : BaseApiController
     public async Task<ActionResult<PagedList<MemberDto>>> GetUsers(
         [FromQuery]UserParams userParams)
     {
+        var currentUser = await GetUserOrDefaultAsync();
+        if (currentUser != null) 
+        {
+            userParams.CurrentUsername = currentUser.Username;
+            if (string.IsNullOrEmpty(userParams.Gender)) 
+            {
+                userParams.Gender = currentUser.Gender == "male" 
+                    ? "female"
+                    : "male";
+            }
+        }
+
         var members = await _userRepository.GetMembersAsync(userParams);
 
         Response.AddPaginationHeader(

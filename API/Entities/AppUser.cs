@@ -27,6 +27,7 @@ public class AppUser
     public byte[] PasswordSalt { get; set; }
     public DateOnly DateOfBirth { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public string Gender { get; set; } = string.Empty;
     public DateTime Created { get; set; } = DateTime.UtcNow;
     public DateTime LastActive { get; set; } = DateTime.UtcNow;
     public string Introduction { get; set; } = string.Empty;

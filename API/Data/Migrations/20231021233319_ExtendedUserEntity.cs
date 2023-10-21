@@ -47,6 +47,13 @@ namespace API.Data.Migrations
                 defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
+                name: "Gender",
+                table: "Users",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
                 name: "Interests",
                 table: "Users",
                 type: "TEXT",
@@ -126,6 +133,10 @@ namespace API.Data.Migrations
 
             migrationBuilder.DropColumn(
                 name: "DisplayName",
+                table: "Users");
+
+            migrationBuilder.DropColumn(
+                name: "Gender",
                 table: "Users");
 
             migrationBuilder.DropColumn(

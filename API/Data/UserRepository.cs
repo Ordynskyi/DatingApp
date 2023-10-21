@@ -50,12 +50,20 @@ public class UserRepository : IUserRepository
 
     public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
     {
-        var query = _context.Users
-            .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-            .AsNoTracking();
-            
+        var query = _context.Users.AsQueryable();
+
+        query = query.Where(u => u.Username != userParams.CurrentUsername);
+        query = query.Where(u => u.Gender == userParams.Gender);
+
+        var minDate = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge - 1));
+        var maxDate = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge));
+
+        query = query.Where(u => u.DateOfBirth >= minDate && u.DateOfBirth <= maxDate);
+                    
         return await PagedList<MemberDto>.CreateAsync(
-            query, userParams.PageNumber, userParams.PageSize);
+            query.AsNoTracking().ProjectTo<MemberDto>(_mapper.ConfigurationProvider), 
+            userParams.PageNumber, 
+            userParams.PageSize);
     }
 
     public async Task<MemberDto?> GetMemberAsync(string username)
