@@ -36,6 +36,8 @@ public class AppUser
     public string City { get; set; } = string.Empty;
     public string Country { get; set; } = string.Empty;
     public List<Photo> Photos { get; set; } = new ();
+    public List<UserLike> LikedByUsers { get; set; } = new List<UserLike>();
+    public List<UserLike> LikedUsers { get; set; } = new List<UserLike>();
 
     // public int GetAge() => DateOfBirth.CalculateAge();
 }
