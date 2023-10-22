@@ -11,5 +11,5 @@ public class Photo
     public string PublicId { get; set; } = string.Empty;
 
     public int AppUserId { get; set; }
-    public AppUser AppUser { get; set; } = new AppUser(0, string.Empty, Array.Empty<byte>(), Array.Empty<byte>());
+    public required AppUser AppUser { get; set; }
 }

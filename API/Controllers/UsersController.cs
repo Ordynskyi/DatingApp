@@ -83,6 +83,7 @@ public class UsersController : BaseApiController
         {
             Url = result.SecureUrl.AbsoluteUri,
             PublicId = result.PublicId,
+            AppUser = user,
         };
 
         if (user.Photos.Count == 0) photo.IsMain = true;
