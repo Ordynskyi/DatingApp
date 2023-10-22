@@ -12,7 +12,7 @@ import { UserParams } from '../_models/userParams';
 export class MembersService {
   baseUrl = environment.apiUrl;
   members: Member[] = [];
-  memberCache = new Map();
+  memberCache = new Map<string,PaginatedResult<Member[]>>();
   
   constructor(private http: HttpClient) { }
 
@@ -34,6 +34,38 @@ export class MembersService {
         return response;
       })
     )
+  }
+
+  getMember(username: string) {
+    
+    // search the user over the memberCache.
+    for (const paginatedResult of this.memberCache.values()) {
+      if (!paginatedResult.result) continue;
+
+      for (const member of paginatedResult.result) {
+        if (member.username == username) return of(member);
+      }
+    }
+    
+    // if haven't found the user - go to the API
+    return this.http.get<Member>(this.baseUrl + 'users/' + username);
+  }
+
+  updateMember(member: Member) {
+    return this.http.put(this.baseUrl + 'users', member).pipe(
+      map(() => {
+        const index = this.members.indexOf(member);
+        this.members[index] = {...this.members[index], ...member}
+      })
+    );
+  }
+
+  setMainPhoto(photoId: number) {
+    return this.http.put(`${this.baseUrl}users/set-main-photo/${photoId}`, {});
+  }
+
+  deletePhoto(photoId: number) {
+    return this.http.delete(`${this.baseUrl}users/delete-photo/${photoId}`);
   }
 
   private getPaginatedResult<T>(url: string, params: HttpParams) {
@@ -60,28 +92,5 @@ export class MembersService {
     params = params.append('pageSize', pageSize);
     
     return params;
-  }
-
-  getMember(username: string) {
-    const member = this.members.find(x => x.username == username);
-    if (member) return of(member);
-    return this.http.get<Member>(this.baseUrl + 'users/' + username);
-  }
-
-  updateMember(member: Member) {
-    return this.http.put(this.baseUrl + 'users', member).pipe(
-      map(() => {
-        const index = this.members.indexOf(member);
-        this.members[index] = {...this.members[index], ...member}
-      })
-    );
-  }
-
-  setMainPhoto(photoId: number) {
-    return this.http.put(`${this.baseUrl}users/set-main-photo/${photoId}`, {});
-  }
-
-  deletePhoto(photoId: number) {
-    return this.http.delete(`${this.baseUrl}users/delete-photo/${photoId}`);
   }
 }
