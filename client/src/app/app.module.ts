@@ -10,6 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { RegisterComponent } from './register/register.component';
 import { MemberListComponent } from './members/member-list/member-list.component';
+import { ListsComponent } from './lists/lists.component';
 import { MessagesComponent } from './messages/messages.component';
 import { SharedModule } from './_modules/shared.module';
 import { ErrorInterceptor } from './_interceptors/error.interceptor';
@@ -30,6 +31,7 @@ import { DatePickerComponent } from './_forms/date-picker/date-picker.component'
     HomeComponent,
     RegisterComponent,
     MemberListComponent,
+    ListsComponent,
     MessagesComponent,
     NotFoundComponent,
     ServerErrorComponent,
