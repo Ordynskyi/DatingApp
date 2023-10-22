@@ -48,7 +48,8 @@ public class AccountController : BaseApiController
             user.Username,
             _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
-            user.DisplayName);
+            user.DisplayName,
+            user.Gender);
     }
 
     [HttpPost("login")] // POST: api/account/login
@@ -73,7 +74,8 @@ public class AccountController : BaseApiController
             user.Username,
             _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
-            user.DisplayName);
+            user.DisplayName,
+            user.Gender);
     }
 
     private async Task<bool> UserExists(string username)
