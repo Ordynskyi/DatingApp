@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using API.Entities;
 using API.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 namespace API.Services;
@@ -10,8 +11,12 @@ public class TokenService : ITokenService
 {
     private readonly SecurityKey _key;
     private readonly TimeSpan _tokenLifeTime;
+    private readonly UserManager<AppUser> _userManager;
 
-    public TokenService(IConfiguration config, ISecurityKeyService securityKeyService)
+    public TokenService(
+        IConfiguration config,
+        ISecurityKeyService securityKeyService,
+        UserManager<AppUser> userManager)
     {
         _key = securityKeyService.GetSecurityKey();
 
@@ -22,15 +27,21 @@ public class TokenService : ITokenService
         }
 
         _tokenLifeTime = TimeSpan.FromSeconds(tokenLifeTimeSec);
+        _userManager = userManager;
     }
 
-    public string CreateToken(AppUser user)
+    public async Task<string> CreateToken(AppUser user)
     {
-        var claims = new Claim[]
+        var roles = await _userManager.GetRolesAsync(user);
+        var rolesCount = roles.Count;
+        var claims = new Claim[rolesCount + 2];
+        claims[0] = new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString());
+        claims[1] = new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty);
+
+        for (var i = 0; i < rolesCount; i++)
         {
-            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty)
-        };
+            claims[i + 2] = new Claim(ClaimTypes.Role, roles[i]);
+        }
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
 

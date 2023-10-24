@@ -42,9 +42,12 @@ public class AccountController : BaseApiController
             return BadRequest(result.Errors);
         }
         
+        var roleResults = await _userManager.AddToRoleAsync(user, "Member");
+        if (!roleResults.Succeeded) return BadRequest(result.Errors);
+
         return new UserDto(
             user.UserName,
-            _tokenService.CreateToken(user),
+            await _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
             user.DisplayName,
             user.Gender);
@@ -66,7 +69,7 @@ public class AccountController : BaseApiController
 
         return new UserDto(
             user.UserName,
-            _tokenService.CreateToken(user),
+            await _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
             user.DisplayName,
             user.Gender);
