@@ -45,8 +45,8 @@ public class MessagesController : BaseApiController
         {
             Sender = sender,
             Recipient = recipient,
-            SenderUsername = sender.Username,
-            RecipientUsername = recipient.Username,
+            SenderUsername = sender.UserName ?? string.Empty,
+            RecipientUsername = recipient.UserName ?? string.Empty,
             Content = dto.Content
         };
 

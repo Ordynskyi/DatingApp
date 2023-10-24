@@ -31,7 +31,7 @@ public class UsersController : BaseApiController
         var currentUser = await GetUserOrDefaultAsync();
         if (currentUser != null) 
         {
-            userParams.CurrentUsername = currentUser.Username;
+            userParams.CurrentUsername = currentUser.UserName ?? string.Empty;
             if (string.IsNullOrEmpty(userParams.Gender)) 
             {
                 userParams.Gender = currentUser.Gender == "male" 
@@ -92,7 +92,7 @@ public class UsersController : BaseApiController
 
         if (await _userRepository.SaveAllAsync()) {
             return CreatedAtAction(nameof(GetUser), 
-                new {username = user.Username}, _mapper.Map<PhotoDto>(photo));
+                new {username = user.UserName}, _mapper.Map<PhotoDto>(photo));
         }
 
         return BadRequest("Problem adding photo");

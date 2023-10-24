@@ -1,22 +1,21 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using API.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
 public class Seed
 {
-    public static async Task SeedUsers(DataContext context)
+    public static async Task SeedUsers(UserManager<AppUser> userManager, ILogger? logger)
     {
-        if (await context.Users.AnyAsync()) return;
+        if (await userManager.Users.AnyAsync()) return;
 
         var userData = await File.ReadAllTextAsync("Data/UserSeedData.json");
 
         if (userData == null) 
         {
-            throw new ArgumentException("Could not get the users data");            
+            throw new ArgumentException("Could not get the users data");
         }
 
         var options = new JsonSerializerOptions {
@@ -32,14 +31,15 @@ public class Seed
 
         foreach (var user in users)
         {
-            using var hmac = new HMACSHA512();
-            user.Username = user.Username.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes("password"));
-            user.PasswordSalt = hmac.Key;
-
-            context.Users.Add(user);
+            user.UserName = user.UserName?.ToLower() ?? string.Empty;
+            
+            var result = await userManager.CreateAsync(user, "password");
+            if (logger != null && !result.Succeeded) {
+                foreach (var error in result.Errors) 
+                {
+                    logger.LogError(error.Description);
+                }                
+            }
         }
-
-        await context.SaveChangesAsync();
     }
 }

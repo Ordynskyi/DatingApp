@@ -1,10 +1,9 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using API.Data;
+﻿using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +11,14 @@ namespace API.Controllers;
 
 public class AccountController : BaseApiController
 {
-    private readonly DataContext _context;
+    private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
 
-    public AccountController(DataContext context, 
+    public AccountController(UserManager<AppUser> userManager, 
         ITokenService tokenService, IMapper mapper)
     {
-        _context = context;
+        _userManager = userManager;
         _tokenService = tokenService;
         _mapper = mapper;
     }
@@ -33,19 +32,18 @@ public class AccountController : BaseApiController
             return BadRequest("User name is taken");
         }
 
-        var user = _mapper.Map<AppUser>(registerDto);
+        var user = _mapper.Map<AppUser>(registerDto);     
 
-        using var hmac = new HMACSHA512();
-
-        user.Username = lowerName;
-        user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-        user.PasswordSalt = hmac.Key;
+        user.UserName = lowerName;
         
-        await _context.Users.AddAsync(user);
-        await _context.SaveChangesAsync();
+        var result = await _userManager.CreateAsync(user);
+        if (!result.Succeeded) 
+        {
+            return BadRequest(result.Errors);
+        }
         
         return new UserDto(
-            user.Username,
+            user.UserName,
             _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
             user.DisplayName,
@@ -56,22 +54,18 @@ public class AccountController : BaseApiController
     public async Task <ActionResult<UserDto>> Login(LoginDto loginDto)
     {
         var lowerName = loginDto.Username.ToLower();
-        var user = await _context.Users
+        var user = await _userManager.Users
             .Include(p => p.Photos)
-            .FirstOrDefaultAsync(x => x.Username == lowerName);
+            .FirstOrDefaultAsync(x => x.UserName == lowerName);
             
         if (user == null) return Unauthorized("user not found");
 
-        using var hmac = new HMACSHA512(user.PasswordSalt);
-        var calculatedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
+        var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
 
-        for (int i = 0; i < calculatedHash.Length; i++)
-        {
-            if (calculatedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid password");
-        }
+        if (!result) return Unauthorized("Invalid password");
 
         return new UserDto(
-            user.Username,
+            user.UserName,
             _tokenService.CreateToken(user),
             GetMainPhotoUrlOrEmpty(user),
             user.DisplayName,
@@ -80,7 +74,7 @@ public class AccountController : BaseApiController
 
     private async Task<bool> UserExists(string username)
     {
-        return await _context.Users.AnyAsync(user => user.Username == username);
+        return await _userManager.Users.AnyAsync(user => user.UserName == username);
     }
 
     private string GetMainPhotoUrlOrEmpty(AppUser user)

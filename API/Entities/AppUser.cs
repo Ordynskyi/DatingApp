@@ -1,30 +1,9 @@
-﻿using API.Extensions;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace API.Entities;
 
-public class AppUser
+public class AppUser : IdentityUser<int>
 {
-    public AppUser() : 
-        this(0, string.Empty, Array.Empty<byte>(), Array.Empty<byte>()) {
-
-    }
-
-    public AppUser(
-        int id,
-        string username,
-        byte[] passwordHash,
-        byte[] passwordSalt)
-    {
-        Id = id;
-        Username = username;
-        PasswordHash = passwordHash;
-        PasswordSalt = passwordSalt;
-    }
-
-    public int Id { get; set; }
-    public string Username { get; set;}
-    public byte[] PasswordHash { get; set; }
-    public byte[] PasswordSalt { get; set; }
     public DateOnly DateOfBirth { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string Gender { get; set; } = string.Empty;
@@ -37,11 +16,13 @@ public class AppUser
     public string Country { get; set; } = string.Empty;
     public List<Photo> Photos { get; set; } = new ();
     
-    public required List<UserLike> LikedByUsers { get; set; }
-    public required List<UserLike> LikedUsers { get; set; }
+    public List<UserLike>? LikedByUsers { get; set; }
+    public List<UserLike>? LikedUsers { get; set; }
 
-    public required List<Message> MessagesSent { get; set; }
-    public required List<Message> MessagesReceived { get; set; }
+    public List<Message>? MessagesSent { get; set; }
+    public List<Message>? MessagesReceived { get; set; }
+
+    public ICollection<AppUserRole>? UserRoles { get; set; }
 
     // public int GetAge() => DateOfBirth.CalculateAge();
 }

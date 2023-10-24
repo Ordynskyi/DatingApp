@@ -22,7 +22,7 @@ public class LikesRepository : ILikesRepository
 
     public async Task<PagedList<LikeDto>> GetUserLikes(LikesParams likesParams)
     {
-        var users = _context.Users.OrderBy(u => u.Username).AsQueryable();
+        var users = _context.Users.OrderBy(u => u.UserName).AsQueryable();
         var likes = _context.Likes.AsQueryable();
 
         if (likesParams.Predicate == "liked")
@@ -38,7 +38,7 @@ public class LikesRepository : ILikesRepository
 
         var query = users.Select(user => new LikeDto
         {
-            Username = user.Username,
+            Username = user.UserName ?? string.Empty,
             DisplayName = user.DisplayName,
             Age = user.DateOfBirth.CalculateAge(),
             PhotoUrl = user.Photos.FirstOrDefault(p => p.IsMain).Url,

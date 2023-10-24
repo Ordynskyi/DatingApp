@@ -29,13 +29,13 @@ public class LikesController : BaseApiController
 
         var sourceUser = await _likesRepository.GetUserWithLikes(sourceUserId);
         if (sourceUser == null) return NotFound();
-        if (sourceUser.Username == username) return BadRequest("A user can not like himself");
+        if (sourceUser.UserName == username) return BadRequest("A user can not like himself");
 
         var userLike = await _likesRepository.GetUserLike(sourceUserId, likedUser.Id);
         if (userLike != null) return BadRequest("The user already liked the target user");
         userLike = new UserLike(sourceUser, likedUser);
 
-        sourceUser.LikedUsers.Add(userLike);
+        sourceUser.LikedUsers?.Add(userLike);
 
         if (await _userRepository.SaveAllAsync()) return Ok();
 
