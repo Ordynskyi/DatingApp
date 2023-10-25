@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { GalleryItem, GalleryModule, ImageItem } from 'ng-gallery';
 import { TabDirective, TabsModule, TabsetComponent } from 'ngx-bootstrap/tabs';
@@ -10,6 +10,9 @@ import { MemberMessagesComponent } from '../member-messages/member-messages.comp
 import { MessageService } from 'src/app/_services/message.service';
 import { Message } from 'src/app/_models/message';
 import { PresenceService } from 'src/app/_services/presence.service';
+import { AccountService } from 'src/app/_services/account.service';
+import { take } from 'rxjs';
+import { User } from 'src/app/_models/user';
 
 @Component({
   selector: 'app-member-detail',
@@ -18,17 +21,29 @@ import { PresenceService } from 'src/app/_services/presence.service';
   styleUrls: ['./member-detail.component.css'],
   imports: [CommonModule, TabsModule, GalleryModule, TimeagoModule, MemberMessagesComponent]
 })
-export class MemberDetailComponent implements OnInit {
+export class MemberDetailComponent implements OnInit, OnDestroy {
   @ViewChild('memberTabs', {static: true}) memberTabs?: TabsetComponent;
   member: Member = {} as Member;
   images: GalleryItem[] = [];
   activeTab?: TabDirective;
   messages: Message[] = [];
+  user?: User;
 
   constructor(
+    private accountService: AccountService,
     private route: ActivatedRoute,
     private messageService: MessageService,
-    public presenceService: PresenceService) { }
+    public presenceService: PresenceService) { 
+      this.accountService.currentUser$.pipe(take(1)).subscribe({
+        next: user => {
+          if (user) this.user = user;
+        }
+      })
+    }
+
+  ngOnDestroy(): void {
+    this.messageService.stopHubConnection();
+  }
   
   ngOnInit(): void {
     this.route.data.subscribe({
@@ -46,8 +61,10 @@ export class MemberDetailComponent implements OnInit {
 
   onTabActivated(data: TabDirective) {
     this.activeTab = data;
-    if (this.activeTab.heading === 'Messages') {
-      this.loadMessages();
+    if (this.activeTab.heading === 'Messages' && this.user) {
+      this.messageService.createHubConnection(this.user, this.member.username)
+    } else {
+      this.messageService.stopHubConnection(); 
     }
   }
 
