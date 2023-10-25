@@ -2,16 +2,16 @@
 
 public class PresenceTracker
 {
-    private readonly Dictionary<string, List<string>> OnlineUsers = new ();
+    private readonly Dictionary<string, List<string>> onlineUsers = new ();
 
     public Task UserConnected(string username, string connectionId)
     {
-        lock(OnlineUsers)
+        lock(onlineUsers)
         {
-            if (!OnlineUsers.TryGetValue(username, out var connectionIds))
+            if (!onlineUsers.TryGetValue(username, out var connectionIds))
             {
                 connectionIds = new List<string>();
-                OnlineUsers[username] = connectionIds;
+                onlineUsers[username] = connectionIds;
             }
 
             connectionIds.Add(connectionId);
@@ -22,14 +22,14 @@ public class PresenceTracker
 
     public Task UserDisconnected(string username, string connectionId)
     {
-        lock(OnlineUsers)
+        lock(onlineUsers)
         {
-            if (!OnlineUsers.TryGetValue(username, out var connectionIds)) return Task.CompletedTask;
+            if (!onlineUsers.TryGetValue(username, out var connectionIds)) return Task.CompletedTask;
 
             connectionIds.Remove(connectionId);
             if (connectionIds.Count == 0)
             {
-                OnlineUsers.Remove(username);
+                onlineUsers.Remove(username);
             }
         }
 
@@ -39,12 +39,24 @@ public class PresenceTracker
     public Task<string[]> GetOnlineUsers()
     {
         string[] usernames;
-        lock(OnlineUsers)
+        lock(onlineUsers)
         {
-            usernames = OnlineUsers.Keys.ToArray();
+            usernames = onlineUsers.Keys.ToArray();
         }
 
         Array.Sort(usernames);
         return Task.FromResult(usernames);
+    }
+
+    public Task<List<string>> GetConnectionsForUser(string username)
+    {
+        List<string>? connectionIds;
+
+        lock (onlineUsers)
+        {
+            connectionIds = onlineUsers.GetValueOrDefault(username) ?? new List<string>();
+        }
+
+        return Task.FromResult(connectionIds);
     }
 }
