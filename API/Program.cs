@@ -45,6 +45,7 @@ try
     var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
     var logger = services.GetService<ILogger<Seed>>();
     await Seed.SeedUsers(userManager, roleManager, logger);
+    await context.Database.ExecuteSqlRawAsync("DELETE FROM [Connections]");
 }
 catch (Exception ex)
 {
