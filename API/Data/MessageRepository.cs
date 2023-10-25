@@ -111,4 +111,12 @@ public class MessageRepository : IMessageRepository
     {
         return await _context.SaveChangesAsync() > 0;
     }
+
+    public async Task<Group?> GetGroupForConnection(string connectionId)
+    {
+        return await _context.Groups
+            .Include(x => x.Connections)
+            .Where(x => x.Connections.Any(c => c.ConnectionId == connectionId))
+            .FirstOrDefaultAsync();
+    }
 }
