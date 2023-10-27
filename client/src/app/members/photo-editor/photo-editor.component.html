@@ -1,22 +1,45 @@
-<div class="row mb-3" *ngIf="member">
-    <div class="col-2 mb-1" *ngFor="let photo of member.photos">
-        <img src="{{photo.url}}" alt="photo of user" class="img-thumbnail mb-1">
-        <div class="text-center">
-            <button 
-                class="btn btn-sm"
-                [disabled]="photo.isMain"
-                (click)="setMainPhoto(photo)"
-                [ngClass]="photo.isMain ? 'btn-success active' : 'btn-outline-success'"
-                >Main
-            </button>
-            <button 
-                class="btn btn-sm btn-danger"
-                [disabled]="photo.isMain"
-                (click)="deletePhoto(photo.id)">
-                <i class="fa fa-trash"></i>
-            </button>
-        </div>
+<div class="row mb-3" *ngIf="member">  
+  <div class="col-2 mb-1" *ngFor="let photo of member.photos">
+    <img src="{{photo.url}}" alt="photo of user" class="img-thumbnail mb-1">
+    <div class="text-center">
+      <button class="btn btn-sm"
+              style="margin-right: 2px;"
+              [disabled]="photo.isMain"
+              (click)="setMainPhoto(photo)"
+              [ngClass]="photo.isMain ? 'btn-success active' : 'btn-outline-success'">
+        Main
+      </button>
+      <button class="btn btn-sm btn-danger"
+              style="margin-left: 2px;"
+              [disabled]="photo.isMain"
+              (click)="deletePhoto(photo.id)">
+        <i class="fa fa-trash"></i>
+      </button>
     </div>
+  </div>
+  <div class="col-2 mb-1" *ngFor="let photo of member.photosToModerate">
+    <div style="position: relative; text-align:center">
+      <img src="{{photo.url}}" alt="photo of user" class="img-thumbnail mb-1" style="filter: opacity(0.4);">
+      <div class="approval-text">
+        Avaiting approval
+      </div>
+    </div>
+    
+    <div class="text-center">
+      <button class="btn btn-sm"
+              style="margin-right: 2px;"
+              [disabled]="true"
+              [ngClass]="'btn-outline-success'">
+        Main
+      </button>
+      <button class="btn btn-sm btn-danger"
+              style="margin-left: 2px;"
+              [disabled]="photo.isMain"
+              (click)="deletePhoto(photo.id)">
+        <i class="fa fa-trash"></i>
+      </button>
+    </div>
+  </div>
 </div>
 <div class="row">
  
