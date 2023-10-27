@@ -15,6 +15,7 @@ import { getPaginatedResult, getPaginationHeaders } from './paginationHelper';
 export class MembersService {
   baseUrl = environment.apiUrl;
   members: Member[] = [];
+  loggedMember: Member | undefined;
   memberCache = new Map<string, PaginatedResult<Member[]>>();
   user: User | undefined;
   userParams: UserParams | undefined;
@@ -79,7 +80,14 @@ export class MembersService {
     }
 
     // if haven't found the user - go to the API
-    return this.http.get<Member>(this.baseUrl + 'users/' + username);
+    return this.http.get<Member>(`${this.baseUrl}users/${username}`);
+  }
+
+  // own moderate photos are available for logged members only
+  getAuthorizedMember() {
+    if (this.loggedMember) return of(this.loggedMember);
+
+    return this.http.get<Member>(`${this.baseUrl}users/authorized-user`);
   }
 
   updateMember(member: Member) {
