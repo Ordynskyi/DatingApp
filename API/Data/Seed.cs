@@ -56,6 +56,8 @@ public class Seed
         var admin = new AppUser
         {
             UserName = "admin",
+            Photos = new List<Photo>(),
+            PhotosToModerate = new List<ModerationPhoto>(),
         };
 
         result = await userManager.CreateAsync(admin, "password");

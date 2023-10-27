@@ -12,7 +12,7 @@ public class AutoMapperProfiles : Profile
             .ForMember(
                 dest => dest.PhotoUrl,
                 source => source.MapFrom(src => src.Photos.FirstOrDefault(p => p.IsMain).Url))
-                // source => source.MapFrom<MainPhotoUrlMapper>())  // this doesn't work with '.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)' in the UserRepository.cs :(
+            // source => source.MapFrom<MainPhotoUrlMapper>())  // this doesn't work with '.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)' in the UserRepository.cs :(
             .ForMember(
                 dest => dest.Age,
                 source => source.MapFrom(src => src.DateOfBirth.CalculateAge()));
@@ -31,6 +31,7 @@ public class AutoMapperProfiles : Profile
 
         CreateMap<DateTime, DateTime>()
             .ConvertUsing(d => DateTime.SpecifyKind(d, DateTimeKind.Utc));
+
         CreateMap<DateTime?, DateTime?>()
             .ConvertUsing(d => d.HasValue 
                 ? DateTime.SpecifyKind(d.Value, DateTimeKind.Utc) : null);

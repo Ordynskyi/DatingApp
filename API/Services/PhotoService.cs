@@ -24,7 +24,13 @@ public class PhotoService : IPhotoService
     {
         if (file.Length <= 0) 
         {
-
+            return new ImageUploadResult()
+            {
+                Error = new Error()
+                {
+                    Message = "File is empty"
+                }
+            };
         }
 
         using var stream = file.OpenReadStream();

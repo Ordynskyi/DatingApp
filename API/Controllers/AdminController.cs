@@ -1,4 +1,6 @@
 ﻿using API.Entities;
+using API.Helpers;
+using API.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +11,17 @@ namespace API.Controllers;
 public class AdminController : BaseApiController
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPhotoService _photoService;
 
-    public AdminController(UserManager<AppUser> userManager)
+    public AdminController(
+        UserManager<AppUser> userManager, 
+        IUnitOfWork unitOfWork,
+        IPhotoService photoService)
     {
         _userManager = userManager;
+        _unitOfWork = unitOfWork;
+        _photoService = photoService;
     }
 
     [Authorize(Policy = "RequireAdminRole")]
@@ -58,9 +67,46 @@ public class AdminController : BaseApiController
     }
 
     [Authorize(Policy = "ModeratePhotoRole")]
-    [HttpGet("photos-to-moderate")]
-    public ActionResult GetPhotosForModeration()
+    [HttpGet("moderation-photos")]
+    public async Task<ActionResult<PagedList<PhotoDto>>> GetPhotosForModeration([FromQuery] PaginationParams paginationParams)
     {
-        return Ok("Admins or moderators can see this");
+        return await _unitOfWork.PhotosRepository
+            .GetModerationPhotoDtosAsync(paginationParams.PageNumber, paginationParams.PageSize);
+    }
+
+    [Authorize(Policy = "ModeratePhotoRole")]
+    [HttpPut("moderate-photo")]
+    public async Task<ActionResult> ModeratePhoto(int photoId, bool approved)
+    {
+        var photoToApprove = await _unitOfWork.PhotosRepository.GetModerationPhotoAsync(photoId);
+
+        if (photoToApprove == null) return BadRequest("The photo not found");
+
+        var appUser = photoToApprove.AppUser;
+        if (appUser == null) return BadRequest("The photo owner user not found");
+
+        if (approved)
+        {
+            var isFirstPhoto = appUser.Photos.Count == 0;
+
+            appUser.Photos.Add(new Photo()
+            {
+                Url = photoToApprove.Url,
+                PublicId = photoToApprove.PublicId,
+                IsMain = isFirstPhoto,
+            });
+        } 
+        else
+        {
+            var deletionResult = await _photoService.DeletePhotoAsync(photoToApprove.PublicId);
+            if (deletionResult.Error != null) return BadRequest(deletionResult.Error.Message);
+        }
+
+        var removed = appUser.PhotosToModerate.Remove(photoToApprove);
+
+
+        if (removed && await _unitOfWork.Complete()) return Ok();
+
+        return BadRequest("Failed to moderate the photo");
     }
 }
