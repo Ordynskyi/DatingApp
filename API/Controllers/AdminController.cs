@@ -1,4 +1,5 @@
 ﻿using API.Entities;
+using API.Extensions;
 using API.Helpers;
 using API.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -70,8 +71,16 @@ public class AdminController : BaseApiController
     [HttpGet("moderation-photos")]
     public async Task<ActionResult<PagedList<PhotoDto>>> GetPhotosForModeration([FromQuery] PaginationParams paginationParams)
     {
-        return await _unitOfWork.PhotosRepository
+        var result = await _unitOfWork.PhotosRepository
             .GetModerationPhotoDtosAsync(paginationParams.PageNumber, paginationParams.PageSize);
+
+        Response.AddPaginationHeader(new PaginationHeader(
+            result.CurrentPage,
+            result.PageSize,
+            result.TotalCount,
+            result.TotalPages));
+        
+        return Ok(result);
     }
 
     [Authorize(Policy = "ModeratePhotoRole")]
@@ -96,7 +105,7 @@ public class AdminController : BaseApiController
                 IsMain = isFirstPhoto,
             });
         } 
-        else
+        else if (!string.IsNullOrEmpty(photoToApprove.PublicId))
         {
             var deletionResult = await _photoService.DeletePhotoAsync(photoToApprove.PublicId);
             if (deletionResult.Error != null) return BadRequest(deletionResult.Error.Message);
