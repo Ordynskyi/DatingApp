@@ -25,10 +25,10 @@ public class LikesController : BaseApiController
 
         var sourceUser = await _uow.LikesRepository.GetUserWithLikes(sourceUserId);
         if (sourceUser == null) return NotFound();
-        if (sourceUser.UserName == username) return BadRequest("A user can not like himself");
+        if (sourceUser.UserName == username) return BadRequest("You can not like himself");
 
         var userLike = await _uow.LikesRepository.GetUserLike(sourceUserId, likedUser.Id);
-        if (userLike != null) return BadRequest("The user already liked the target user");
+        if (userLike != null) return BadRequest("You have already liked this user");
         userLike = new UserLike(sourceUser, likedUser);
 
         sourceUser.LikedUsers?.Add(userLike);
