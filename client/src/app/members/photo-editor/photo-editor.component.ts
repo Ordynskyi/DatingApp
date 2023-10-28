@@ -54,11 +54,25 @@ export class PhotoEditorComponent implements OnInit {
   deletePhoto(photoId: number) {
     this.memberService.deletePhoto(photoId).subscribe({
       next: _ => {
-        if (this.member) {
-          this.member.photos = this.member.photos.filter(p => p.id != photoId);
-        }
+        if (!this.member) return;
+
+        const photoIndex = this.member.photos.findIndex(p => p.id == photoId);
+        if (photoIndex < 0) return;
+        this.member.photos.splice(photoIndex, 1);
       }
-    })
+    });
+  }
+
+  deleteModerationPhoto(photoId: number) {
+    this.memberService.deleteModerationPhoto(photoId).subscribe({
+      next: _ => {
+        if (!this.member) return;
+
+        const photoIndex = this.member.photosToModerate.findIndex(p => p.id == photoId);
+        if (photoIndex < 0) return;
+        this.member.photosToModerate.splice(photoIndex, 1);
+      }
+    });
   }
 
   initializeUploader() {
@@ -79,7 +93,7 @@ export class PhotoEditorComponent implements OnInit {
     this.uploader.onSuccessItem = (item, response, status, headers) => {
       if (response) {
         const photo = JSON.parse(response);
-        this.member?.photos.push(photo);
+        this.member?.photosToModerate.push(photo);
         if (photo.isMain && this.user && this.member) {
           this.user.photoUrl = photo.url;
           this.member.photoUrl = photo.url;
