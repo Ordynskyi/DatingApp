@@ -36,7 +36,7 @@ public class AccountController : BaseApiController
 
         user.UserName = lowerName;
         
-        var result = await _userManager.CreateAsync(user);
+        var result = await _userManager.CreateAsync(user, registerDto.Password);
         if (!result.Succeeded) 
         {
             return BadRequest(result.Errors);
@@ -48,7 +48,7 @@ public class AccountController : BaseApiController
         return new UserDto(
             user.UserName,
             await _tokenService.CreateToken(user),
-            GetMainPhotoUrlOrEmpty(user),
+            GetMainPhotoUrlOrDefault(user),
             user.DisplayName,
             user.Gender);
     }
@@ -70,7 +70,7 @@ public class AccountController : BaseApiController
         return new UserDto(
             user.UserName,
             await _tokenService.CreateToken(user),
-            GetMainPhotoUrlOrEmpty(user),
+            GetMainPhotoUrlOrDefault(user),
             user.DisplayName,
             user.Gender);
     }
@@ -80,8 +80,9 @@ public class AccountController : BaseApiController
         return await _userManager.Users.AnyAsync(user => user.UserName == username);
     }
 
-    private string GetMainPhotoUrlOrEmpty(AppUser user)
+    private string? GetMainPhotoUrlOrDefault(AppUser user)
     {
+        if (user.Photos == null) return null;
         foreach (var photo in user.Photos)
         {
             if (photo.IsMain) return photo.Url;
