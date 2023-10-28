@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
             query = query.Include(p => p.Photos);
         }
 
-        if ((includeFlags & IncludeProperty.ModeratePhotos) != 0)
+        if ((includeFlags & IncludeProperty.ModerationPhotos) != 0)
         {
             query = query.Include(p => p.PhotosToModerate);
         }
@@ -60,8 +60,9 @@ public class UserRepository : IUserRepository
 
     public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
     {
-        var minDate = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge - 1));
-        var maxDate = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge));
+        var dateNow = DateTime.UtcNow.Date;
+        var minDate = DateOnly.FromDateTime(dateNow.AddYears(-userParams.MaxAge - 1));
+        var maxDate = DateOnly.FromDateTime(dateNow.AddYears(-userParams.MinAge));
 
         var query = _context.Users.AsQueryable()
             .Where(u => u.UserName != userParams.CurrentUsername &&
@@ -84,7 +85,7 @@ public class UserRepository : IUserRepository
     private Expression<Func<AppUser,MemberDto>> CreateMemberDtoExpression(IncludeProperty includePropFlags)
     {
         var includePhotos = (includePropFlags & IncludeProperty.Photos) != 0;
-        var includeModeratePhotos = (includePropFlags & IncludeProperty.ModeratePhotos) != 0;
+        var includeModeratePhotos = (includePropFlags & IncludeProperty.ModerationPhotos) != 0;
 
         return u => new MemberDto(u.Id, u.UserName)
         {
