@@ -36,12 +36,13 @@ public class Seed
             new AppRole{Name = "Moderator"}
         };
 
+        IdentityResult result;
         foreach (var role in roles)
         {
-            await roleManager.CreateAsync(role);
+            result = await roleManager.CreateAsync(role);
+            if (CheckAndLogError(result, logger)) return;
         }
 
-        IdentityResult result;
         foreach (var user in users)
         {
             user.UserName = user.UserName?.ToLower() ?? string.Empty;
