@@ -11,7 +11,7 @@ public interface IUserRepository
     {
         None = 0,
         Photos = 1,
-        ModeratePhotos = 1 << 1,
+        ModerationPhotos = 1 << 1,
     }
 
     void Update(AppUser user);
