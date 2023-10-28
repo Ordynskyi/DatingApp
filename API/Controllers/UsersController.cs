@@ -60,7 +60,7 @@ public class UsersController : BaseApiController
     [HttpGet("authorized-user")]   // /api/authorized-user
     public async Task<ActionResult<MemberDto?>> GetAuthorizedUser()
     {
-        return await _uow.UserRepository.GetMemberAsync(User.GetUserId(), IncludeProperty.Photos | IncludeProperty.ModeratePhotos);
+        return await _uow.UserRepository.GetMemberAsync(User.GetUserId(), IncludeProperty.Photos | IncludeProperty.ModerationPhotos);
     }
 
     [HttpPut]
@@ -79,7 +79,7 @@ public class UsersController : BaseApiController
     [HttpPost("add-photo")]
     public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file) 
     {
-        var user = await GetUserOrDefaultAsync(IncludeProperty.ModeratePhotos);
+        var user = await GetUserOrDefaultAsync(IncludeProperty.ModerationPhotos);
         if (user == null) return NotFound();
 
         var result = await _photoService.AddPhotoAsync(file);
@@ -126,36 +126,43 @@ public class UsersController : BaseApiController
     [HttpDelete("delete-photo/{photoId}")]
     public async Task<ActionResult> DeletePhoto(int photoId)
     {
-        var user = await GetUserOrDefaultAsync(IncludeProperty.Photos | IncludeProperty.ModeratePhotos);
+        var user = await GetUserOrDefaultAsync(IncludeProperty.Photos);
         if (user == null) return NotFound();
 
-        string? publicId = null;
-        bool isMain = false;
-
         var photo = user.Photos.FirstOrDefault(p => p.Id == photoId);
-        
-        ModerationPhoto? moderationPhoto = null;
-        if (photo != null)
-        {
-            publicId = photo.PublicId;
-            isMain = photo.IsMain;
-            user.Photos.Remove(photo);
-        }
-        else
-        {
-            moderationPhoto = user.PhotosToModerate.FirstOrDefault(p => p.Id == photoId);
-            if (moderationPhoto == null) return NotFound();
-            publicId = moderationPhoto.PublicId;
-            user.PhotosToModerate.Remove(moderationPhoto);
-        }
+        if (photo == null) return NotFound();
 
-        if (isMain) return BadRequest("You can not delete your main photo");
+        if (photo.IsMain) return BadRequest("You can not delete your main photo");
 
-        if (publicId != null) 
+        if (photo.PublicId != null)
         {
-            var result = await _photoService.DeletePhotoAsync(publicId);
+            var result = await _photoService.DeletePhotoAsync(photo.PublicId);
             if (result.Error != null) return BadRequest(result.Error.Message);
-        }        
+        }
+
+        user.Photos.Remove(photo);
+
+        if (await _uow.Complete()) return Ok();
+
+        return BadRequest("Problem deleting photo");
+    }
+
+    [HttpDelete("delete-moderation-photo/{photoId}")]
+    public async Task<ActionResult<IEnumerable<AppUser>>> DeleteModerationPhoto(int photoId)
+    {
+        var user = await GetUserOrDefaultAsync(IncludeProperty.ModerationPhotos);
+        if (user == null) return NotFound();
+
+        var photo = user.PhotosToModerate.FirstOrDefault(p => p.Id == photoId);
+        if (photo == null) return NotFound();
+
+        if (photo.PublicId != null)
+        {
+            var result = await _photoService.DeletePhotoAsync(photo.PublicId);
+            if (result.Error != null) return BadRequest(result.Error.Message);
+        }
+
+        user.PhotosToModerate.Remove(photo);
 
         if (await _uow.Complete()) return Ok();
 
