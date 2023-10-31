@@ -5,7 +5,7 @@ namespace API.Interfaces
 {
     public interface IPhotosRepository
     {
-        Task<PagedList<PhotoDto>> GetModerationPhotoDtosAsync(int page, int pageSize);
         Task<ModerationPhoto?> GetModerationPhotoAsync(int photoId);
+        Task<IList<PhotoDto>> GetModerationPhotoDtosAsync(int startIndex, int count);
     }
 }

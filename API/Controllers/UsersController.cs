@@ -3,6 +3,7 @@ using API.Entities;
 using API.Extensions;
 using API.Helpers;
 using API.Interfaces;
+using API.SignalR;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,21 @@ public class UsersController : BaseApiController
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly IPhotoService _photoService;
+    private readonly PhotoModerator _photoModerator;
+    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUnitOfWork uow, IMapper mapper,
-        IPhotoService photoService)
+    public UsersController(
+        IUnitOfWork uow, 
+        IMapper mapper,
+        IPhotoService photoService,
+        PhotoModerator photoModerator,
+        ILogger<UsersController> logger)
     {
         _uow = uow;
         _mapper = mapper;
         _photoService = photoService;
+        _photoModerator = photoModerator;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -79,28 +88,15 @@ public class UsersController : BaseApiController
     [HttpPost("add-photo")]
     public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file) 
     {
-        var user = await GetUserOrDefaultAsync(IncludeProperty.ModerationPhotos);
-        if (user == null) return NotFound();
-
-        var result = await _photoService.AddPhotoAsync(file);
-
-        if (result.Error != null) return BadRequest(result.Error.Message);
-
-        var photo = new ModerationPhoto()
+        try
         {
-            Url = result.SecureUrl.AbsoluteUri,
-            PublicId = result.PublicId,
-            AppUser = user,
-        };
-
-        user.PhotosToModerate.Add(photo);
-
-        if (await _uow.Complete()) {
-            return CreatedAtAction(nameof(GetAuthorizedUser), 
-                new {username = user.UserName}, _mapper.Map<PhotoDto>(photo));
+            var photoDto = await _photoModerator.AddModerationPhotoAsync(User.GetUserId(), file);
+            return CreatedAtAction(nameof(GetAuthorizedUser), new {username = User.GetUsername()}, photoDto);
         }
-
-        return BadRequest("Problem adding photo");
+        catch(ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpPut("set-main-photo/{photoId}")]
@@ -150,23 +146,16 @@ public class UsersController : BaseApiController
     [HttpDelete("delete-moderation-photo/{photoId}")]
     public async Task<ActionResult<IEnumerable<AppUser>>> DeleteModerationPhoto(int photoId)
     {
-        var user = await GetUserOrDefaultAsync(IncludeProperty.ModerationPhotos);
-        if (user == null) return NotFound();
-
-        var photo = user.PhotosToModerate.FirstOrDefault(p => p.Id == photoId);
-        if (photo == null) return NotFound();
-
-        if (photo.PublicId != null)
+        try
         {
-            var result = await _photoService.DeletePhotoAsync(photo.PublicId);
-            if (result.Error != null) return BadRequest(result.Error.Message);
+            await _photoModerator.ModeratePhoto(photoId, false);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
 
-        user.PhotosToModerate.Remove(photo);
-
-        if (await _uow.Complete()) return Ok();
-
-        return BadRequest("Problem deleting photo");
+        return Ok();
     }
 
     private async Task<AppUser?> GetUserOrDefaultAsync(IncludeProperty propFlags)

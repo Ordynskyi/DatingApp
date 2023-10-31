@@ -1,6 +1,8 @@
 ﻿using API.Entities;
 using API.Helpers;
 using API.Interfaces;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data
@@ -8,9 +10,14 @@ namespace API.Data
     public class PhotosRepository : IPhotosRepository
     {
         private readonly DataContext _context;
-        public PhotosRepository(DataContext context) 
+        private readonly IMapper _mapper;
+
+        public PhotosRepository(
+            DataContext context,
+            IMapper mapper) 
         { 
-            _context = context; 
+            _context = context;
+            _mapper = mapper;
         }
 
         public async Task<ModerationPhoto?> GetModerationPhotoAsync(int photoId)
@@ -22,18 +29,14 @@ namespace API.Data
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<PagedList<PhotoDto>> GetModerationPhotoDtosAsync(int page, int pageSize)
+        public async Task<IList<PhotoDto>> GetModerationPhotoDtosAsync(int startIndex, int count)
         {
-            var query = _context.Users
-                .AsNoTracking()
-                .SelectMany(u => u.PhotosToModerate)
-                .Select(p => new PhotoDto()
-                {
-                    Id = p.Id,
-                    Url = p.Url
-                });
-
-            return await PagedList<PhotoDto>.CreateAsync(query, page, pageSize);
+            return await _context.PhotosToModerate
+                .OrderBy(p => p.Id)
+                .Skip(startIndex)
+                .Take(count)
+                .ProjectTo<PhotoDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
     }
 }

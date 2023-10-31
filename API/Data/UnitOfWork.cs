@@ -20,7 +20,7 @@ public class UnitOfWork : IUnitOfWork
 
     public ILikesRepository LikesRepository => new LikesRepository(_context);
 
-    public IPhotosRepository PhotosRepository => new PhotosRepository(_context);
+    public IPhotosRepository PhotosRepository => new PhotosRepository(_context, _mapper);
 
     public async Task<bool> Complete()
     {

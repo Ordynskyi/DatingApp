@@ -25,6 +25,10 @@ public static class AppServicesExtensions
         services.AddSignalR();
         services.AddSingleton<PresenceTracker>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        services.AddSingleton<ModerationPhotosPool>();
+        services.AddScoped<PhotoModerator>();
+        services.AddScoped<ModeratorsNotificator>();
 
         return services;
     }
