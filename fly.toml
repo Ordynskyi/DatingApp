@@ -1,0 +1,23 @@
+# fly.toml app configuration file generated for datinga-app on 2023-10-31T21:17:41-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "datinga-app"
+primary_region = "sea"
+
+[build]
+  image = "andreyordynsky/datingapp:latest"
+
+[env]
+  ASPNETCORE_URLS="http://+:8080"
+  CloudinarySettings__CloudName="sharedcloud"
+  CloudinarySettings__ApiKey="566477786453385"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
