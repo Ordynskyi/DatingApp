@@ -13,6 +13,7 @@ primary_region = "sea"
   ASPNETCORE_URLS="http://+:8080"
   CloudinarySettings__CloudName="sharedcloud"
   CloudinarySettings__ApiKey="566477786453385"
+  TokenLifeTimeSec="93600"
 
 [http_service]
   internal_port = 8080
